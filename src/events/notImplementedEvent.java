@@ -1,5 +1,5 @@
 package events;
 
-public class notImplementedEvent extends model.Event {
+public class NotImplementedEvent extends model.Event {
 
 }
