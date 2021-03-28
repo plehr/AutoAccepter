@@ -1,11 +1,11 @@
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import events.NotImplementedEvent;
 import model.Event;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -14,9 +14,9 @@ import okhttp3.Response;
 public class EventProducer extends Thread {
 	private final String name = "EventProducer";
 	private boolean running = true;
-	private final List<Event> evList;
+	private final LinkedBlockingQueue<Event> evList;
 
-	public EventProducer(List<Event> l) {
+	public EventProducer(LinkedBlockingQueue<Event> l) {
 		this.evList = l;
 	}
 
@@ -27,18 +27,18 @@ public class EventProducer extends Thread {
 				work();
 				Thread.sleep(10000);
 			} catch (InterruptedException e) {
-				System.err.println("Error on " + name + ": " + e.getMessage());
+				Helper.logErr(name, e);
 			}
 		}
 	}
 
-	public void work() {
+	private void work() {
 		while (running)
 			try {
 				for (Event ev : getEvent())
-					evList.add(ev);
+					evList.offer(ev);
 			} catch (Exception e) {
-				System.err.println("Error on " + name + ": " + e.getMessage());
+				Helper.logErr(name, e);
 			}
 	}
 
@@ -57,7 +57,7 @@ public class EventProducer extends Thread {
 		OkHttpClient client = new OkHttpClient().newBuilder().readTimeout(30, TimeUnit.SECONDS)
 				.connectTimeout(30, TimeUnit.SECONDS).build();
 		Request request = new Request.Builder()
-				.url("http://" + System.getenv("HOST") + ":" + System.getenv("PORT") + "/rest/events")// ?timeout=300&events=PendingDevicesChanged
+				.url("http://" + System.getenv("HOST") + ":" + System.getenv("PORT") + "/rest/events?timeout=300&events=PendingDevicesChanged") 
 				.method("GET", null).addHeader("X-API-Key", System.getenv("API-KEY")).build();
 		Response response = client.newCall(request).execute();
 		String str = response.body().string();

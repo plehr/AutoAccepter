@@ -1,25 +1,25 @@
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.concurrent.*;
 import model.Event;
 
 public class Main {
 
-	public static void main(String[] args) {
-		List<Event> eventList = Collections.synchronizedList(new ArrayList<Event>());
+	public static void main(String[] args) throws InterruptedException {
+		LinkedBlockingQueue<Event> eventQueue = new LinkedBlockingQueue<Event>();
 
-		EventProducer evProd = new EventProducer(eventList);
+		EventProducer evProd = new EventProducer(eventQueue);
 		evProd.start();
+
+		EventConsumer evCons = new EventConsumer(eventQueue);
+		evCons.start();
+
 		System.out.println("Please type enter to stop process:");
 		try {
 			System.in.read();
 		} catch (IOException e) {
 		}
-		System.out.println("SIZE: " + eventList.size());
-		for (Event event : eventList)
-			System.out.println(event.getClass());
 
 		evProd.shutdown();
+		evCons.shutdown();
 	}
 }
