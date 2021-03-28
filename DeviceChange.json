@@ -1,0 +1,28 @@
+[
+    {
+        "id": 36628,
+        "globalID": 40763,
+        "time": "2021-03-16T10:58:07.231516557+01:00",
+        "type": "PendingDevicesChanged",
+        "data": {
+            "added": [
+                {
+                    "address": "127.0.0.1:12345",
+                    "deviceID": "ABCDEFG-ABCDEFG-ABCDEFG-ABCDEFG-ABCDEFG-ABCDEFG-ABCDEFG-ABCDEFG",
+                    "name": "ubuntu-s-1vcpu-1gb-sgp1-01"
+                }
+            ]
+        }
+    },
+    {
+        "id": 36629,
+        "globalID": 40764,
+        "time": "2021-03-16T10:58:07.231552983+01:00",
+        "type": "DeviceRejected",
+        "data": {
+            "address": "127.0.0.1:12345",
+            "device": "ABCDEFG-ABCDEFG-ABCDEFG-ABCDEFG-ABCDEFG-ABCDEFG-ABCDEFG-ABCDEFG",
+            "name": "ubuntu-s-1vcpu-1gb-sgp1-01"
+        }
+    }
+]
