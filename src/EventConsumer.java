@@ -1,6 +1,8 @@
 import java.util.concurrent.LinkedBlockingQueue;
 
+import events.DeviceRejected;
 import events.NotImplementedEvent;
+import events.PendingDevicesChanged;
 import model.Event;
 
 public class EventConsumer extends Thread {
@@ -14,13 +16,12 @@ public class EventConsumer extends Thread {
 
 	@Override
 	public void run() {
-		while (running) {
+		while (running)
 			try {
 				work();
 			} catch (Exception e) {
 				Helper.logErr(name, e);
 			}
-		}
 	}
 
 	private void work() throws InterruptedException {
@@ -28,6 +29,13 @@ public class EventConsumer extends Thread {
 		System.out.println(ev.getClass());
 		if (ev.getClass() == NotImplementedEvent.class)
 			System.out.println("NotImplement: " + ev.globalID);
+
+		if (ev.getClass() == DeviceRejected.class)
+			System.out.println(ev);
+
+		if (ev.getClass() == PendingDevicesChanged.class)
+			System.out.println(ev);
+
 	}
 
 	public void shutdown() {
