@@ -1,11 +1,5 @@
 import java.io.IOException;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-
-import model.Event;
+import java.time.Duration;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -13,10 +7,9 @@ import okhttp3.Response;
 public class EventProducer extends Thread {
 	private final String name = "EventProducer";
 	private boolean running = true;
-	private final LinkedBlockingQueue<Event> evList;
 
-	public EventProducer(LinkedBlockingQueue<Event> l) {
-		this.evList = l;
+	public EventProducer() {
+
 	}
 
 	@Override
@@ -31,11 +24,18 @@ public class EventProducer extends Thread {
 		}
 	}
 
-	private void work() {
+	private void work() throws InterruptedException {
+		Main.sem.acquire();
+		System.out.println("EventProducer WOKE UP");
 		while (running)
 			try {
-				for (Event ev : getEvent())
-					evList.offer(ev);
+				
+				if (listen()) {
+					Main.sem.release();
+					Main.sem.acquire();
+					System.out.println("EventProducer WOKE UP");
+				}
+
 			} catch (Exception e) {
 				Helper.logErr(name, e);
 			}
@@ -52,18 +52,29 @@ public class EventProducer extends Thread {
 		running = false;
 	}
 
-	private Event[] getEvent() throws IOException {
-		OkHttpClient client = new OkHttpClient().newBuilder().readTimeout(30, TimeUnit.SECONDS)
-				.connectTimeout(30, TimeUnit.SECONDS).build();
-		Request request = new Request.Builder()
-				.url("http://" + System.getenv("HOST") + ":" + System.getenv("PORT") + "/rest/events?timeout=300&events=PendingDevicesChanged") 
-				.method("GET", null).addHeader("X-API-Key", System.getenv("API-KEY")).build();
-		Response response = client.newCall(request).execute();
-		String str = response.body().string();
-		GsonBuilder builder = new GsonBuilder();
-		builder.registerTypeAdapter(Event.class, new CustomDeserializer());
-		Gson gson = builder.create();
-		Event[] result2 = gson.fromJson(str, Event[].class);
-		return result2;
+	private boolean listen() throws IOException {
+		OkHttpClient client = new OkHttpClient().newBuilder().readTimeout(Duration.ofHours(2))
+				  .build();
+				Request request = new Request.Builder()
+				  .url("http://" + System.getenv("HOST") + ":" + System.getenv("PORT")
+					+ "/rest/events?timeout=300&events=PendingDevicesChanged")
+				  .method("GET", null)
+				  .addHeader("X-API-Key", System.getenv("API-KEY"))
+				  .build();
+				Response response = client.newCall(request).execute();
+		
+		
+//		OkHttpClient client = new OkHttpClient().newBuilder().readTimeout(30, TimeUnit.SECONDS)
+//				.connectTimeout(30, TimeUnit.SECONDS).build();
+//		Request request = new Request.Builder()
+//				.url("http://" + System.getenv("HOST") + ":" + System.getenv("PORT")
+//						+ "/rest/events?timeout=300&events=PendingDevicesChanged")
+//				.method("GET", null).addHeader("X-API-Key", System.getenv("API-KEY")).build();
+//		Response response = client.newCall(request).execute();
+		System.out.println("LISTENER " + response.code());
+		int i = response.code();
+		if (i == 200)
+			return true;
+		return false;
 	}
 }
